@@ -8,6 +8,7 @@
 bool debug_mode = false;
 
 bool rti_screen_up = true;
+bool any_button_was_clicked = false;
 unsigned long last_back_btn_click = 0;
 unsigned long back_btn_click_count = 0;
 unsigned long clicks_to_close_screen = 4;
@@ -168,7 +169,6 @@ void click_button(byte button) {
         Serial.println("Home (h)");
       } else {
         closeRtiScreen();
-        //Keyboard.write(KEY_BACKSPACE);
         Keyboard.write('h');
       }
       break;  
@@ -200,6 +200,8 @@ void click_button(byte button) {
       }
       break;
   }
+
+  any_button_was_clicked = true;
 }
 
 // ########################################
@@ -267,21 +269,26 @@ long since(long timestamp) {
 
 // Close screen after 4 times clicking the back button (clicks should happen within 2 seconds)
 void closeRtiScreen() {
-    if(last_back_btn_click == 0 || since(last_back_btn_click) < 2000) {
-      last_back_btn_click = currentMillis;
-      back_btn_click_count++;
-      
-      if(back_btn_click_count >= clicks_to_close_screen) {
-        rti_screen_up = false;
+    if(!any_button_was_clicked && rti_screen_up) {
+         rti_screen_up = false;
+    }
+    else {
+      if(last_back_btn_click == 0 || since(last_back_btn_click) < 2000) {
+        last_back_btn_click = currentMillis;
+        back_btn_click_count++;
+        
+        if(back_btn_click_count >= clicks_to_close_screen) {
+          rti_screen_up = false;
+          back_btn_click_count = 0;
+          last_back_btn_click = 0;
+          debug("Close RTI screen");
+        }
+
+      } else {
         back_btn_click_count = 0;
         last_back_btn_click = 0;
-        debug("Close RTI screen");
       }
-
-    } else {
-      back_btn_click_count = 0;
-      last_back_btn_click = 0;
-    }
+    ]
 }
 
 // send serial data to Volvo RTI screen mechanism
