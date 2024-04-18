@@ -222,14 +222,16 @@ void click_joystick(byte button) {
   switch (button) {
     case JOYSTICK_UP:
       if(debug_mode) {
-         Serial.println("Up");
+         //Serial.println("Up");
+          Serial.println("Left");
       } else {
         Keyboard.write(KEY_UP_ARROW);
       }
       break;
     case JOYSTICK_DOWN:
       if(debug_mode) {
-        Serial.println("Down");
+        //Serial.println("Down");
+        Serial.println("Right");
       } else {
         Keyboard.write(KEY_DOWN_ARROW);
       }
@@ -316,16 +318,4 @@ void rti() {
   lastRtiWrite = currentMillis;
 }
 
-// ########################################
-// UTILS
-// ########################################
-
-void debug(String message) {
-  if (debug_mode) {
-    Serial.println(message);
-  }
-}
-
-void rti_print(char byte) {
-  Serial1.print(byte);
-}
+// ############################
