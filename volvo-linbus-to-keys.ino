@@ -13,12 +13,13 @@ unsigned long last_back_btn_click = 0;
 unsigned long back_btn_click_count = 0;
 unsigned long clicks_to_close_screen = 4;
 
-
 // Pins we use for MCP2004
 #define RX_PIN 10
 #define TX_PIN 11
-#define FAULT_PIN 14
 #define CS_PIN 8
+// We dont use this pin
+// #define FAULT_PIN 14
+
 
 #define SYN_FIELD 0x55
 #define SWM_ID 0x20
@@ -67,7 +68,7 @@ short rtiStep;
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
-  //Serial1 is Arduino default TX & RX pins, connected to RTI screen
+  //Serial1 is Arduino default TX pin connected to RTI screen
   Serial1.begin(2400);
 
   // Open serial communications to host (PC) and wait for port to open:
@@ -79,14 +80,18 @@ void setup() {
   pinMode(CS_PIN, OUTPUT);
   digitalWrite(CS_PIN, HIGH);
 
-  pinMode(FAULT_PIN, OUTPUT);
-  digitalWrite(FAULT_PIN, HIGH);
+  // pinMode(FAULT_PIN, OUTPUT);
+  // digitalWrite(FAULT_PIN, HIGH);
 
   frame = LinFrame();
 }
 
 void loop() {
   currentMillis = millis();
+
+  // if (Serial.available()) {
+  //   read_raspberry_serial()
+  // }
 
   if (LINBusSerial.available()) {
     b = LINBusSerial.read();
@@ -117,8 +122,6 @@ void loop() {
   //     rti_screen_up = true;
   //   }
   // }
-
-  rti();
 }
 
 void handle_frame() {
@@ -140,10 +143,7 @@ void handle_frame() {
     handle_joystick();
     lastClick = currentMillis;
   }
-
 }
-
-
 
 // ########################################
 // BUTTONS
@@ -168,7 +168,6 @@ void click_button(byte button) {
       if(debug_mode) {
         Serial.println("Home (h)");
       } else {
-        closeRtiScreen();
         Keyboard.write('h');
       }
       break;  
@@ -176,13 +175,8 @@ void click_button(byte button) {
       if(debug_mode) {
         Serial.println("Space");
       } else {
-        //Turn up RTI screen if off
-        if(!rti_screen_up) {
-          rti_screen_up = true;
-        } else {
           Keyboard.write(' ');
           Keyboard.write(KEY_UP_ARROW);
-        }
       }
       break;  
     case BUTTON_NEXT:
@@ -225,7 +219,8 @@ void click_joystick(byte button) {
          //Serial.println("Up");
           Serial.println("Left");
       } else {
-        Keyboard.write(KEY_UP_ARROW);
+        // Keyboard.write(KEY_UP_ARROW);
+        Keyboard.write(KEY_LEFT_ARROW);
       }
       break;
     case JOYSTICK_DOWN:
@@ -233,7 +228,8 @@ void click_joystick(byte button) {
         //Serial.println("Down");
         Serial.println("Right");
       } else {
-        Keyboard.write(KEY_DOWN_ARROW);
+        // Keyboard.write(KEY_DOWN_ARROW);
+        Keyboard.write(KEY_RIGHT_ARROW);
       }
       break;
     case JOYSTICK_LEFT:
@@ -252,70 +248,3 @@ void click_joystick(byte button) {
       break;
   }
 }
-
-void dump_frame() {
-  for (i = 0; i < frame.num_bytes(); i++) {
-    Serial.print(frame.get_byte(i), HEX);
-    Serial.print(" ");
-  }
-  Serial.println();
-}
-
-
-// ########################################
-//  RTI Screen
-// ########################################
-long since(long timestamp) {
-  return currentMillis - timestamp;
-}
-
-// Close screen after 4 times clicking the back button (clicks should happen within 2 seconds)
-void closeRtiScreen() {
-    if(!any_button_was_clicked && rti_screen_up) {
-         rti_screen_up = false;
-    }
-    else {
-      if(last_back_btn_click == 0 || since(last_back_btn_click) < 2000) {
-        last_back_btn_click = currentMillis;
-        back_btn_click_count++;
-        
-        if(back_btn_click_count >= clicks_to_close_screen) {
-          rti_screen_up = false;
-          back_btn_click_count = 0;
-          last_back_btn_click = 0;
-          debug("Close RTI screen");
-        }
-
-      } else {
-        back_btn_click_count = 0;
-        last_back_btn_click = 0;
-      }
-    ]
-}
-
-// send serial data to Volvo RTI screen mechanism
-void rti() {
-  if (since(lastRtiWrite) < RTI_INTERVAL) return;
-
-  switch (rtiStep) {
-    case 0: // mode
-      rti_print(rti_screen_up ? 0x40 : 0x46);
-      debug(rti_screen_up ? "RTI ON" : "RTI OFF");
-      rtiStep++;
-      break;
-
-    case 1: // brightness
-      rti_print(0x20);
-      rtiStep++;
-      break;
-
-    case 2: // sync
-      rti_print(0x83);
-      rtiStep = 0;
-      break;
-  }
-
-  lastRtiWrite = currentMillis;
-}
-
-// ############################
