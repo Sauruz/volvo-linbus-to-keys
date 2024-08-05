@@ -6,8 +6,6 @@
 
 //If this is set true, button events will only be logged
 bool debug_mode = false;
-
-bool rti_screen_up = true;
 bool any_button_was_clicked = false;
 unsigned long last_back_btn_click = 0;
 unsigned long back_btn_click_count = 0;
@@ -89,10 +87,6 @@ void setup() {
 void loop() {
   currentMillis = millis();
 
-  // if (Serial.available()) {
-  //   read_raspberry_serial()
-  // }
-
   if (LINBusSerial.available()) {
     b = LINBusSerial.read();
     n = frame.num_bytes();
@@ -116,11 +110,6 @@ void loop() {
   //   byte incomingByte = Serial.read();
   //   // say what you got:
   //   Serial.print("I received: ");
-  //   Serial.println(incomingByte, DEC);
-  //   closeRtiScreen();
-  //   if(incomingByte == 111) {
-  //     rti_screen_up = true;
-  //   }
   // }
 }
 
